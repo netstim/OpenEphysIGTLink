@@ -26,14 +26,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <ProcessorHeaders.h>
 
 
-class ProcessorPlugin : public GenericProcessor
+#include "igtlOSUtil.h"
+#include "igtlTransformMessage.h"
+#include "igtlServerSocket.h"
+
+class OpenIGTLinkPlugin : public GenericProcessor
 {
 public:
 	/** The class constructor, used to initialize any members. */
-	ProcessorPlugin();
+	OpenIGTLinkPlugin();
 
 	/** The class destructor, used to deallocate memory */
-	~ProcessorPlugin();
+	~OpenIGTLinkPlugin();
 
 	/** If the processor has a custom editor, this method must be defined to instantiate it. */
 	AudioProcessorEditor* createEditor() override;
@@ -70,6 +74,13 @@ public:
 	/** Load custom settings from XML. This method is not needed to load the state of
 		Parameter objects*/
 	void loadCustomParametersFromXml(XmlElement* parentElement) override;
+
+private:
+
+	igtl::ServerSocket::Pointer serverSocket;
+	igtl::TransformMessage::Pointer transMsg;
+	igtl::Socket::Pointer socket;
+
 
 };
 

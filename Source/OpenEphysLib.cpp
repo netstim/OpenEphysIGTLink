@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <PluginInfo.h>
 
-#include "ProcessorPlugin.h"
+#include "OpenIGTLinkPlugin.h"
 #include <string>
 
 #ifdef WIN32
@@ -42,8 +42,8 @@ extern "C" EXPORT void getLibInfo(Plugin::LibraryInfo* info)
 	Should not be changed to ensure it is always equal to the one used in the latest codebase.
 	The GUI refueses to load plugins with mismatched API versions */
 	info->apiVersion = PLUGIN_API_VER;
-	info->name = "Plugin Library Name"; // <---- update
-	info->libVersion = "0.1.0"; // <---- update
+	info->name = "OpenIGTLink";
+	info->libVersion = "0.1.0";
 	info->numPlugins = NUM_PLUGINS;
 }
 
@@ -53,17 +53,12 @@ extern "C" EXPORT int getPluginInfo(int index, Plugin::PluginInfo* info)
 	{
 		//one case per plugin. This example is for a processor which connects directly to the signal chain
 	case 0:
-		//Type of plugin. See "Source/Processors/PluginManager/OpenEphysPlugin.h" for complete info about the different type structures
 		info->type = Plugin::Type::PROCESSOR;
+		info->processor.name = "OpenIGTLink"; //Processor name shown in the GUI
+		info->processor.type = Processor::Type::SINK;
 
-		//Processor name
-		info->processor.name = "Plugin Name"; //Processor name shown in the GUI
-
-		//Type of processor. Can be FILTER, SOURCE, SINK or UTILITY. Specifies where on the processor list will appear
-		info->processor.type = Processor::Type::FILTER;
-
-		//Class factory pointer. Replace "ProcessorPluginSpace::ProcessorPlugin" with the namespace and class name.
-		info->processor.creator = &(Plugin::createProcessor<ProcessorPlugin>);
+		//Class factory pointer. Replace "ProcessorPluginSpace::OpenIGTLinkPlugin" with the namespace and class name.
+		info->processor.creator = &(Plugin::createProcessor<OpenIGTLinkPlugin>);
 		break;
 	default:
 		return -1;

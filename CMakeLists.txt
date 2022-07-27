@@ -94,8 +94,12 @@ endforeach()
 #additional libraries, if needed
 #find_package(LIBNAME)
 #or
-#find_library(LIBNAME_LIBRARIES NAMES libname)
-#find_path(LIBNAME_INCLUDE_DIRS includefile.h)
+
+# TODO
+find_library(OPENIGTLINK_LIBRARIES 
+			NAMES OpenIGTLink
+			HINTS "/Users/simon/bin/OpenIGTLink/bin")
+set(OPENIGTLINK_INCLUDE_DIRS "/Users/simon/bin/OpenIGTLink" "/Users/simon/repo/OpenIGTLink/Source" "/Users/simon/repo/OpenIGTLink/Source/igtlutil")
 #
-#target_link_libraries(${PLUGIN_NAME} ${LIBNAME_LIBRARIES})
-#target_include_directories(${PLUGIN_NAME} PRIVATE ${LIBNAME_INCLUDE_DIRS})
+target_link_libraries(${PLUGIN_NAME} ${OPENIGTLINK_LIBRARIES})
+target_include_directories(${PLUGIN_NAME} PRIVATE ${OPENIGTLINK_INCLUDE_DIRS})
