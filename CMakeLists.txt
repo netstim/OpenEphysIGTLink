@@ -78,7 +78,7 @@ elseif(APPLE)
 	set_property(TARGET ${PLUGIN_NAME} APPEND_STRING PROPERTY LINK_FLAGS
 	"-undefined dynamic_lookup -rpath @loader_path/../../../../shared")
 
-	install(TARGETS ${PLUGIN_NAME} DESTINATION $ENV{HOME}/Library/Application\ Support/open-ephys/PlugIns)
+	install(TARGETS ${PLUGIN_NAME} DESTINATION /Users/simon/repo/plugin-GUI/Build/Release/open-ephys.app/Contents/PlugIns)
 	set(CMAKE_PREFIX_PATH /opt/local)
 endif()
 
@@ -91,15 +91,14 @@ foreach( src_file IN ITEMS ${SRC_FILES})
 	source_group("${group_name}" FILES "${src_file}")
 endforeach()
 
-#additional libraries, if needed
-#find_package(LIBNAME)
-#or
+find_package(OpenIGTLink REQUIRED)
 
-# TODO
-find_library(OPENIGTLINK_LIBRARIES 
-			NAMES OpenIGTLink
-			HINTS "/Users/simon/bin/OpenIGTLink/bin")
-set(OPENIGTLINK_INCLUDE_DIRS "/Users/simon/bin/OpenIGTLink" "/Users/simon/repo/OpenIGTLink/Source" "/Users/simon/repo/OpenIGTLink/Source/igtlutil")
-#
-target_link_libraries(${PLUGIN_NAME} ${OPENIGTLINK_LIBRARIES})
-target_include_directories(${PLUGIN_NAME} PRIVATE ${OPENIGTLINK_INCLUDE_DIRS})
+include(
+	${OpenIGTLink_USE_FILE}
+)
+
+include_directories(
+	${OpenIGTLink_INCLUDE_DIRS}
+)
+
+target_link_libraries(${PLUGIN_NAME} OpenIGTLink)

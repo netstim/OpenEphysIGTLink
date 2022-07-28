@@ -39,14 +39,30 @@ OpenIGTLinkPlugin::OpenIGTLinkPlugin()
     serverSocket = igtl::ServerSocket::New();
     int r = serverSocket->CreateServer(18944);
 
-    socket = serverSocket->WaitForConnection(1000);
+    if (r < 0)
+    {
+        std::cout << "Cannot create a server socket." << std::endl;
+    }
+    else
+    {
+        socket = serverSocket->WaitForConnection(1000);
+        if (socket.IsNotNull())
+        {
+            std::cout << "Client connected." << std::endl;
+        }
+        else
+        {
+            std::cout << "Client not connected." << std::endl;
+        }
+    }
 
 }
 
 
 OpenIGTLinkPlugin::~OpenIGTLinkPlugin()
 {
-    socket->CloseSocket();
+    if (socket.IsNotNull())
+        socket->CloseSocket();
 }
 
 
@@ -67,21 +83,19 @@ void OpenIGTLinkPlugin::updateSettings()
 void OpenIGTLinkPlugin::process(AudioBuffer<float>& buffer)
 {
 
-    checkForEvents(true);
-
-    igtl::Matrix4x4 matrix;
-    // GetRandomTestMatrix(matrix);
-    transMsg->SetDeviceName("Tracker");
-    transMsg->SetMatrix(matrix);
-    transMsg->Pack();
-    socket->Send(transMsg->GetPackPointer(), transMsg->GetPackSize());
- 
+    checkForEvents(true); 
 }
 
 
 void OpenIGTLinkPlugin::handleTTLEvent(TTLEventPtr event)
 {
-
+    igtl::Matrix4x4 matrix;
+    transMsg->SetMatrix(matrix);
+    transMsg->Pack();
+    if (socket.IsNotNull())
+    {
+        // socket->Send(transMsg->GetPackPointer(), transMsg->GetPackSize());
+    }
 }
 
 
