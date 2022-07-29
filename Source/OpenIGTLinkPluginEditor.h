@@ -24,18 +24,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define PROCESSORPLUGINEDITOR_H_DEFINED
 
 #include <EditorHeaders.h>
+#include "OpenIGTLinkPlugin.h"
 
-class OpenIGTLinkPluginEditor : public GenericEditor
+class OpenIGTLinkPluginEditor : public GenericEditor,
+								public Button::Listener
+
 {
 public:
-
 	/** Constructor */
-	OpenIGTLinkPluginEditor(GenericProcessor* parentNode);
+	OpenIGTLinkPluginEditor(GenericProcessor *parentNode);
 
 	/** Destructor */
-	~OpenIGTLinkPluginEditor() { }
+	~OpenIGTLinkPluginEditor() {}
+
+	/** Respond to button clicks*/
+	void buttonClicked(Button *button);
 
 private:
+	ScopedPointer<UtilityButton> connectButton;
 
 	/** Generates an assertion if this class leaks */
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OpenIGTLinkPluginEditor);

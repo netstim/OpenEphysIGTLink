@@ -22,10 +22,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "OpenIGTLinkPluginEditor.h"
 
-OpenIGTLinkPluginEditor::OpenIGTLinkPluginEditor(GenericProcessor* parentNode) 
+OpenIGTLinkPluginEditor::OpenIGTLinkPluginEditor(GenericProcessor *parentNode)
     : GenericEditor(parentNode)
 {
 
-    desiredWidth = 150;
+    addTextBoxParameterEditor("port", 15, 25);
 
+    // add connect button
+    connectButton = new UtilityButton("Connect", Font("Small Text", 13, Font::plain));
+    connectButton->setRadius(3.0f);
+    connectButton->setBounds(15, 75, 65, 18);
+    connectButton->addListener(this);
+    connectButton->setTooltip("Connect to IGTL client.");
+    addAndMakeVisible(connectButton);
+
+    desiredWidth = 150;
+}
+
+void OpenIGTLinkPluginEditor::buttonClicked(Button *button)
+{
+    if (button == connectButton)
+    {
+        OpenIGTLinkPlugin *processor = (OpenIGTLinkPlugin *)getProcessor();
+        processor->startIGTLConnection();
+    }
 }
