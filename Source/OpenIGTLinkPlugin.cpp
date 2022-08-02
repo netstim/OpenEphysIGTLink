@@ -65,19 +65,37 @@ void OpenIGTLinkPlugin::handleSpike(SpikePtr event)
 
 void OpenIGTLinkPlugin::handleBroadcastMessage(String message)
 {
-    if (message.startsWith("NeuroOmega:Depth:"))
+    // Example message: IGTL:Transform:TransformName:1:0:0:0:0:1:0:0:0:0:1:0
+    if (message.startsWith("IGTL"))
     {
-        igtl::TransformMessage::Pointer transMsg = igtl::TransformMessage::New();
-        transMsg->SetDeviceName("Tracker");
-
-        igtl::Matrix4x4 matrix;
-        igtl::IdentityMatrix(matrix);
-        matrix[2][3] = std::stoi(message.fromFirstOccurrenceOf("NeuroOmega:Depth:", false, false).toStdString());
-        transMsg->SetMatrix(matrix);
-        transMsg->Pack();
-        if (socket.IsNotNull())
+        StringArray messageParts;
+        messageParts.addTokens(message, ":", "\"");
+        if (messageParts.size() < 15)
         {
-            socket->Send(transMsg->GetPackPointer(), transMsg->GetPackSize());
+            return;
+        }
+
+        int messageIdx = 1;
+        String messageType = messageParts[messageIdx++];
+
+        if (messageType.equalsIgnoreCase("Transform"))
+        {
+            igtl::TransformMessage::Pointer transMsg = igtl::TransformMessage::New();
+            transMsg->SetDeviceName(messageParts[messageIdx++].toStdString());
+            igtl::Matrix4x4 matrix;
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 4; j++)
+                {
+                    matrix[i][j] = std::stof(messageParts[messageIdx++].toStdString());
+                }
+            }
+            transMsg->SetMatrix(matrix);
+            transMsg->Pack();
+            if (socket.IsNotNull())
+            {
+                socket->Send(transMsg->GetPackPointer(), transMsg->GetPackSize());
+            }
         }
     }
 }
