@@ -25,7 +25,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "igtlOSUtil.h"
 #include "igtlTransformMessage.h"
+#include "igtlPointMessage.h"
 #include "igtlServerSocket.h"
+
+typedef struct
+{
+    double x;
+    double y;
+    double z;
+} igtlPoint;
+
+typedef std::vector<igtlPoint> PointList;
 
 OpenIGTLinkPlugin::OpenIGTLinkPlugin()
     : GenericProcessor("OpenIGTLink")
@@ -68,33 +78,62 @@ void OpenIGTLinkPlugin::handleBroadcastMessage(String message)
     // Example message: IGTL:Transform:TransformName:1:0:0:0:0:1:0:0:0:0:1:0
     if (message.startsWith("IGTL"))
     {
-        StringArray messageParts;
-        messageParts.addTokens(message, ":", "\"");
-        if (messageParts.size() < 15)
-        {
-            return;
-        }
+        StringArray subMessages;
+        subMessages.addTokens(message, ";", "\"");
 
-        int messageIdx = 1;
-        String messageType = messageParts[messageIdx++];
-
-        if (messageType.equalsIgnoreCase("Transform"))
+        for (int m = 0; m < subMessages.size(); m++)
         {
-            igtl::TransformMessage::Pointer transMsg = igtl::TransformMessage::New();
-            transMsg->SetDeviceName(messageParts[messageIdx++].toStdString());
-            igtl::Matrix4x4 matrix;
-            for (int i = 0; i < 3; i++)
+            StringArray messageParts;
+            messageParts.addTokens(subMessages[m], ":", "\"");
+
+            int messageIdx = 1;
+            String messageType = messageParts[messageIdx++];
+
+            if (messageType.equalsIgnoreCase("Transform"))
             {
-                for (int j = 0; j < 4; j++)
+                if (messageParts.size() < 15)
+                    return;
+
+                igtl::TransformMessage::Pointer transMsg = igtl::TransformMessage::New();
+                transMsg->SetDeviceName(messageParts[messageIdx++].toStdString());
+                igtl::Matrix4x4 matrix;
+                for (int i = 0; i < 3; i++)
                 {
-                    matrix[i][j] = std::stof(messageParts[messageIdx++].toStdString());
+                    for (int j = 0; j < 4; j++)
+                    {
+                        matrix[i][j] = std::stof(messageParts[messageIdx++].toStdString());
+                    }
+                }
+
+                transMsg->SetMatrix(matrix);
+                transMsg->Pack();
+                if (socket.IsNotNull())
+                {
+                    socket->Send(transMsg->GetPackPointer(), transMsg->GetPackSize());
                 }
             }
-            transMsg->SetMatrix(matrix);
-            transMsg->Pack();
-            if (socket.IsNotNull())
+            else if (messageType.equalsIgnoreCase("Point"))
             {
-                socket->Send(transMsg->GetPackPointer(), transMsg->GetPackSize());
+                igtl::PointMessage::Pointer pointMsg = igtl::PointMessage::New();
+                pointMsg->SetDeviceName(messageParts[messageIdx++].toStdString());
+                for (; messageIdx < messageParts.size(); messageIdx++)
+                {
+                    StringArray pointParts;
+                    pointParts.addTokens(messageParts[messageIdx], ",", "\"");
+                    igtl::PointElement::Pointer point = igtl::PointElement::New();
+                    point->SetPosition(pointParts[0].getFloatValue(), pointParts[1].getFloatValue(), pointParts[2].getFloatValue());
+                    point->SetName(pointParts[3].toStdString().c_str());
+                    point->SetGroupName("GROUP_0");
+                    point->SetRGBA(0x00, 0x00, 0xFF, 0xFF);
+                    point->SetRadius(75.0);
+                    point->SetOwner("IMAGE_0");
+                    pointMsg->AddPointElement(point);
+                }
+                pointMsg->Pack();
+                if (socket.IsNotNull())
+                {
+                    socket->Send(pointMsg->GetPackPointer(), pointMsg->GetPackSize());
+                }
             }
         }
     }
