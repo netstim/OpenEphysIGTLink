@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "igtlOSUtil.h"
 #include "igtlTransformMessage.h"
 #include "igtlPointMessage.h"
+#include "igtlStringMessage.h"
 #include "igtlServerSocket.h"
 
 typedef struct
@@ -76,6 +77,7 @@ void OpenIGTLinkPlugin::handleSpike(SpikePtr event)
 void OpenIGTLinkPlugin::handleBroadcastMessage(String message)
 {
     // Example message: IGTL:Transform:TransformName:1:0:0:0:0:1:0:0:0:0:1:0
+    std::cout << "\nrecieve: " << message << std::endl;
     if (message.startsWith("IGTL"))
     {
         StringArray subMessages;
@@ -133,6 +135,17 @@ void OpenIGTLinkPlugin::handleBroadcastMessage(String message)
                 if (socket.IsNotNull())
                 {
                     socket->Send(pointMsg->GetPackPointer(), pointMsg->GetPackSize());
+                }
+            }
+            else if (messageType.equalsIgnoreCase("String"))
+            {
+                igtl::StringMessage::Pointer strMsg = igtl::StringMessage::New();
+                strMsg->SetDeviceName(messageParts[messageIdx++].toStdString());
+                strMsg->SetString(messageParts[messageIdx++].toStdString());
+                strMsg->Pack();
+                if (socket.IsNotNull())
+                {
+                    socket->Send(strMsg->GetPackPointer(), strMsg->GetPackSize());
                 }
             }
         }
