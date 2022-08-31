@@ -79,8 +79,8 @@ public:
 	void OpenIGTLinkPlugin::startIGTLConnection();
 
 private:
-	igtl::ServerSocket::Pointer serverSocket;
-	igtl::Socket::Pointer socket;
+	// igtl::ServerSocket::Pointer serverSocket;
+	// igtl::Socket::Pointer socket;
 };
 
 #endif

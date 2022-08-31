@@ -23,20 +23,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "OpenIGTLinkPlugin.h"
 #include "OpenIGTLinkPluginEditor.h"
 
+#include "OpenIGTLinkCommon.h"
+
 #include "igtlOSUtil.h"
 #include "igtlTransformMessage.h"
 #include "igtlPointMessage.h"
 #include "igtlStringMessage.h"
 #include "igtlServerSocket.h"
-
-typedef struct
-{
-    double x;
-    double y;
-    double z;
-} igtlPoint;
-
-typedef std::vector<igtlPoint> PointList;
 
 OpenIGTLinkPlugin::OpenIGTLinkPlugin()
     : GenericProcessor("OpenIGTLink")
@@ -47,8 +40,8 @@ OpenIGTLinkPlugin::OpenIGTLinkPlugin()
 
 OpenIGTLinkPlugin::~OpenIGTLinkPlugin()
 {
-    if (socket.IsNotNull())
-        socket->CloseSocket();
+    // if (socket.IsNotNull())
+    //     socket->CloseSocket();
 }
 
 AudioProcessorEditor *OpenIGTLinkPlugin::createEditor()
@@ -109,10 +102,10 @@ void OpenIGTLinkPlugin::handleBroadcastMessage(String message)
 
                 transMsg->SetMatrix(matrix);
                 transMsg->Pack();
-                if (socket.IsNotNull())
-                {
-                    socket->Send(transMsg->GetPackPointer(), transMsg->GetPackSize());
-                }
+                // if (socket.IsNotNull())
+                // {
+                //     socket->Send(transMsg->GetPackPointer(), transMsg->GetPackSize());
+                // }
             }
             else if (messageType.equalsIgnoreCase("Point"))
             {
@@ -132,10 +125,10 @@ void OpenIGTLinkPlugin::handleBroadcastMessage(String message)
                     pointMsg->AddPointElement(point);
                 }
                 pointMsg->Pack();
-                if (socket.IsNotNull())
-                {
-                    socket->Send(pointMsg->GetPackPointer(), pointMsg->GetPackSize());
-                }
+                // if (socket.IsNotNull())
+                // {
+                //     socket->Send(pointMsg->GetPackPointer(), pointMsg->GetPackSize());
+                // }
             }
             else if (messageType.equalsIgnoreCase("String"))
             {
@@ -143,10 +136,10 @@ void OpenIGTLinkPlugin::handleBroadcastMessage(String message)
                 strMsg->SetDeviceName(messageParts[messageIdx++].toStdString());
                 strMsg->SetString(messageParts[messageIdx++].toStdString());
                 strMsg->Pack();
-                if (socket.IsNotNull())
-                {
-                    socket->Send(strMsg->GetPackPointer(), strMsg->GetPackSize());
-                }
+                // if (socket.IsNotNull())
+                // {
+                //     socket->Send(strMsg->GetPackPointer(), strMsg->GetPackSize());
+                // }
             }
         }
     }
@@ -162,23 +155,8 @@ void OpenIGTLinkPlugin::loadCustomParametersFromXml(XmlElement *parentElement)
 
 void OpenIGTLinkPlugin::startIGTLConnection()
 {
-    serverSocket = igtl::ServerSocket::New();
-    int r = serverSocket->CreateServer(18944);
 
-    if (r < 0)
-    {
-        std::cout << "Cannot create a server socket." << std::endl;
-    }
-    else
-    {
-        socket = serverSocket->WaitForConnection(1000);
-        if (socket.IsNotNull())
-        {
-            std::cout << "Client connected." << std::endl;
-        }
-        else
-        {
-            std::cout << "Client not connected." << std::endl;
-        }
-    }
+    OpenIGTLinkCommon *c = new OpenIGTLinkCommon();
+    c->test();
+    c->startIGTLinkConnection(18944);
 }
