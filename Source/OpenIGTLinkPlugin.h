@@ -25,8 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <ProcessorHeaders.h>
 
-#include "igtlOSUtil.h"
-#include "igtlServerSocket.h"
+#include "OpenIGTLinkCommon.h"
 
 class OpenIGTLinkPlugin : public GenericProcessor
 {
@@ -79,8 +78,7 @@ public:
 	void OpenIGTLinkPlugin::startIGTLConnection();
 
 private:
-	// igtl::ServerSocket::Pointer serverSocket;
-	// igtl::Socket::Pointer socket;
+	OpenIGTLinkCommon *openIGTLinkLogic;
 };
 
 #endif
