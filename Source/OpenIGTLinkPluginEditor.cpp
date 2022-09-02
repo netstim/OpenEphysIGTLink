@@ -47,11 +47,11 @@ void OpenIGTLinkPluginEditor::buttonClicked(Button *button)
         bool connected = false;
         if (connectButton->getLabel().equalsIgnoreCase("Connect"))
         {
-            connected = processor->startIGTLConnection();
+            connected = processor->openIGTLinkLogic->startIGTLinkConnection(processor->getParameter("port")->getValue());
         }
         else
         {
-            processor->closeIGTLConnection();
+            processor->openIGTLinkLogic->closeConnection();
         }
         connectButton->setLabel(connected ? "Disconnect" : "Connect");
     }

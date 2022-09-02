@@ -72,13 +72,6 @@ public:
 		Parameter objects*/
 	void loadCustomParametersFromXml(XmlElement *parentElement) override;
 
-	/** TODO
-	 *
-	 */
-	bool startIGTLConnection();
-	void closeIGTLConnection();
-
-private:
 	OpenIGTLinkCommon *openIGTLinkLogic;
 };
 

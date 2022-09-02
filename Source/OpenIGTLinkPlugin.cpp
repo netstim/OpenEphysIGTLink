@@ -79,13 +79,3 @@ void OpenIGTLinkPlugin::saveCustomParametersToXml(XmlElement *parentElement)
 void OpenIGTLinkPlugin::loadCustomParametersFromXml(XmlElement *parentElement)
 {
 }
-
-bool OpenIGTLinkPlugin::startIGTLConnection()
-{
-    return openIGTLinkLogic->startIGTLinkConnection(getParameter("port")->getValue());
-}
-
-void OpenIGTLinkPlugin::closeIGTLConnection()
-{
-    openIGTLinkLogic->closeConnection();
-}
