@@ -75,7 +75,8 @@ public:
 	/** TODO
 	 *
 	 */
-	void OpenIGTLinkPlugin::startIGTLConnection();
+	bool startIGTLConnection();
+	void closeIGTLConnection();
 
 private:
 	OpenIGTLinkCommon *openIGTLinkLogic;

@@ -13,9 +13,9 @@ public:
 
     ~OpenIGTLinkCommon();
 
-    int startIGTLinkConnection(int port);
+    bool startIGTLinkConnection(int port);
 
-    int isConnected();
+    bool isConnected();
 
     void closeConnection();
 

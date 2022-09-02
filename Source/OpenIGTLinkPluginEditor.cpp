@@ -44,6 +44,15 @@ void OpenIGTLinkPluginEditor::buttonClicked(Button *button)
     if (button == connectButton)
     {
         OpenIGTLinkPlugin *processor = (OpenIGTLinkPlugin *)getProcessor();
-        processor->startIGTLConnection();
+        bool connected = false;
+        if (connectButton->getLabel().equalsIgnoreCase("Connect"))
+        {
+            connected = processor->startIGTLConnection();
+        }
+        else
+        {
+            processor->closeIGTLConnection();
+        }
+        connectButton->setLabel(connected ? "Disconnect" : "Connect");
     }
 }

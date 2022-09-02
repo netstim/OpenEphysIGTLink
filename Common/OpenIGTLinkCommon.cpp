@@ -17,7 +17,7 @@ OpenIGTLinkCommon::~OpenIGTLinkCommon()
     closeConnection();
 }
 
-int OpenIGTLinkCommon::startIGTLinkConnection(int port)
+bool OpenIGTLinkCommon::startIGTLinkConnection(int port)
 {
     igtl::ServerSocket::Pointer serverSocket = igtl::ServerSocket::New();
     int r = serverSocket->CreateServer(port);
@@ -30,7 +30,7 @@ int OpenIGTLinkCommon::startIGTLinkConnection(int port)
     return isConnected();
 }
 
-int OpenIGTLinkCommon::isConnected()
+bool OpenIGTLinkCommon::isConnected()
 {
     return OpenIGTLinkCommon::socket.IsNotNull();
 }
