@@ -58,7 +58,7 @@ void OpenIGTLinkCommon::sendPointMessage(String deviceName, Array<float> values)
     {
         igtl::PointElement::Pointer point = igtl::PointElement::New();
         point->SetPosition(values[i++], values[i++], values[i++]);
-        point->SetName("");
+        point->SetName(std::to_string(i / 3).c_str());
         point->SetGroupName("GROUP_0");
         point->SetRGBA(0x00, 0x00, 0xFF, 0xFF);
         point->SetRadius(75.0);
