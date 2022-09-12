@@ -23,6 +23,8 @@ public:
     void sendStringMessage(String deviceName, String sendString);
     void sendPointMessage(String deviceName, Array<float> values);
 
+    static int currentPort;
+
 private:
     static igtl::Socket::Pointer socket;
 

@@ -7,6 +7,7 @@
 #include "igtlServerSocket.h"
 
 igtl::Socket::Pointer OpenIGTLinkCommon::socket = nullptr;
+int OpenIGTLinkCommon::currentPort = 18944;
 
 OpenIGTLinkCommon::OpenIGTLinkCommon()
 {
