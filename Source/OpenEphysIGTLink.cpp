@@ -1,4 +1,4 @@
-#include "OpenIGTLinkCommon.h"
+#include "OpenEphysIGTLink.h"
 
 #include "igtlOSUtil.h"
 #include "igtlTransformMessage.h"
@@ -6,52 +6,57 @@
 #include "igtlStringMessage.h"
 #include "igtlServerSocket.h"
 
-igtl::Socket::Pointer OpenIGTLinkCommon::socket = nullptr;
-int OpenIGTLinkCommon::currentPort = 18944;
+igtl::Socket::Pointer OpenIGTLinkLogic::socket = nullptr;
+int OpenIGTLinkLogic::currentPort = 18944;
 
-OpenIGTLinkCommon::OpenIGTLinkCommon()
+OpenIGTLinkLogic::OpenIGTLinkLogic()
 {
 }
 
-OpenIGTLinkCommon::~OpenIGTLinkCommon()
+OpenIGTLinkLogic::~OpenIGTLinkLogic()
 {
     closeConnection();
 }
 
-bool OpenIGTLinkCommon::startIGTLinkConnection(int port)
+bool OpenIGTLinkLogic::startIGTLinkConnection(int port)
 {
     igtl::ServerSocket::Pointer serverSocket = igtl::ServerSocket::New();
     int r = serverSocket->CreateServer(port);
 
     if (r >= 0)
     {
-        OpenIGTLinkCommon::socket = serverSocket->WaitForConnection(1000);
+        OpenIGTLinkLogic::socket = serverSocket->WaitForConnection(1000);
     }
 
     return isConnected();
 }
 
-bool OpenIGTLinkCommon::isConnected()
+bool OpenIGTLinkLogic::isConnected()
 {
-    return OpenIGTLinkCommon::socket.IsNotNull();
+    return (OpenIGTLinkLogic::socket != nullptr);
 }
 
-void OpenIGTLinkCommon::closeConnection()
+void OpenIGTLinkLogic::closeConnection()
 {
     if (isConnected())
-        OpenIGTLinkCommon::socket->CloseSocket();
+        OpenIGTLinkLogic::socket->CloseSocket();
+    OpenIGTLinkLogic::socket = nullptr;
 }
 
-void OpenIGTLinkCommon::sendStringMessage(String deviceName, String sendString)
+void OpenIGTLinkLogic::sendStringMessage(String deviceName, String sendString)
 {
     igtl::StringMessage::Pointer strMsg = igtl::StringMessage::New();
     strMsg->SetDeviceName(deviceName.toStdString());
     strMsg->SetString(sendString.toStdString());
     strMsg->Pack();
+    std::cout << sendString.toStdString() << std::endl;
     if (isConnected())
-        OpenIGTLinkCommon::socket->Send(strMsg->GetPackPointer(), strMsg->GetPackSize());
+    {
+        std::cout << "sending" << std::endl;
+        OpenIGTLinkLogic::socket->Send(strMsg->GetPackPointer(), strMsg->GetPackSize());
+    }
 }
-void OpenIGTLinkCommon::sendPointMessage(String deviceName, Array<float> values)
+void OpenIGTLinkLogic::sendPointMessage(String deviceName, Array<float> values)
 {
     igtl::PointMessage::Pointer pointMsg = igtl::PointMessage::New();
     pointMsg->SetDeviceName(deviceName.toStdString());
@@ -68,10 +73,10 @@ void OpenIGTLinkCommon::sendPointMessage(String deviceName, Array<float> values)
     }
     pointMsg->Pack();
     if (isConnected())
-        OpenIGTLinkCommon::socket->Send(pointMsg->GetPackPointer(), pointMsg->GetPackSize());
+        OpenIGTLinkLogic::socket->Send(pointMsg->GetPackPointer(), pointMsg->GetPackSize());
 }
 
-void OpenIGTLinkCommon::sendTransformMessage(String deviceName, Array<float> values)
+void OpenIGTLinkLogic::sendTransformMessage(String deviceName, Array<float> values)
 {
     igtl::TransformMessage::Pointer transMsg = igtl::TransformMessage::New();
     transMsg->SetDeviceName(deviceName.toStdString());
@@ -90,5 +95,5 @@ void OpenIGTLinkCommon::sendTransformMessage(String deviceName, Array<float> val
     transMsg->Pack();
 
     if (isConnected())
-        OpenIGTLinkCommon::socket->Send(transMsg->GetPackPointer(), transMsg->GetPackSize());
+        OpenIGTLinkLogic::socket->Send(transMsg->GetPackPointer(), transMsg->GetPackSize());
 }

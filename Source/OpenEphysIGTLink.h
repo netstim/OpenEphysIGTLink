@@ -1,17 +1,24 @@
-#ifndef OPENIGTLINKCOMMON_H_DEFINED
-#define OPENIGTLINKCOMMON_H_DEFINED
+#ifndef OpenIGTLinkLogic_H_DEFINED
+#define OpenIGTLinkLogic_H_DEFINED
 
 #include <CommonLibHeader.h>
 
 #include "igtlOSUtil.h"
 #include "igtlServerSocket.h"
 
-class COMMON_LIB OpenIGTLinkCommon
+// namespace igtl
+// {
+//     class Socket;
+// extern template class SmartPointer<Socket>();
+// extern template class SmartPointer<class TObjectType>();
+// }
+
+class COMMON_LIB OpenIGTLinkLogic
 {
 public:
-    OpenIGTLinkCommon();
+    OpenIGTLinkLogic();
 
-    ~OpenIGTLinkCommon();
+    ~OpenIGTLinkLogic();
 
     bool startIGTLinkConnection(int port);
 
@@ -28,7 +35,7 @@ public:
 private:
     static igtl::Socket::Pointer socket;
 
-    JUCE_LEAK_DETECTOR(OpenIGTLinkCommon);
+    JUCE_LEAK_DETECTOR(OpenIGTLinkLogic);
 };
 
 #endif

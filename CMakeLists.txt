@@ -8,13 +8,12 @@ if(NOT DEFINED GUI_BASE_DIR)
 	endif()
 endif()
 
-add_subdirectory(Common)
-
 get_filename_component(PROJECT_FOLDER ${CMAKE_CURRENT_SOURCE_DIR} ABSOLUTE)
-get_filename_component(PLUGIN_NAME ${PROJECT_FOLDER} NAME)
+get_filename_component(COMMONLIB_NAME ${PROJECT_FOLDER} NAME)
 
-project(OE_PLUGIN_${PLUGIN_NAME})
-set(CMAKE_SHARED_LIBRARY_PREFIX "")
+set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE STRING "Build architecture for Mac OS X" FORCE)
+
+project(OE_COMMONLIB_${COMMONLIB_NAME})
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 	set(LINUX 1)
@@ -25,33 +24,36 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 endif()
 
 set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS
-	OEPLUGIN
 	"$<$<PLATFORM_ID:Windows>:JUCE_API=__declspec(dllimport)>"
 	$<$<PLATFORM_ID:Windows>:_CRT_SECURE_NO_WARNINGS>
 	$<$<PLATFORM_ID:Linux>:JUCE_DISABLE_NATIVE_FILECHOOSERS=1>
 	$<$<CONFIG:Debug>:DEBUG=1>
 	$<$<CONFIG:Debug>:_DEBUG=1>
-	$<$<CONFIG:Release>:NDEBUG=1>
+	$<$<NOT:$<CONFIG:Debug>>:NDEBUG=1>
 )
 
 set(SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Source)
-file(GLOB_RECURSE SRC_FILES LIST_DIRECTORIES false "${SOURCE_PATH}/*.cpp" "${SOURCE_PATH}/*.h")
+file(GLOB_RECURSE SRC_FILES LIST_DIRECTORIES false "${SOURCE_PATH}/*.cpp")
+file(GLOB_RECURSE HEADER_FILES LIST_DIRECTORIES false "${SOURCE_PATH}/*.h")
+list(APPEND SRC_FILES ${HEADER_FILES})
 set(GUI_COMMONLIB_DIR ${GUI_BASE_DIR}/installed_libs)
 
-set(CONFIGURATION_FOLDER $<$<CONFIG:Debug>:Debug>$<$<NOT:$<CONFIG:Debug>>:Release>)
+list(APPEND CMAKE_PREFIX_PATH
+	${GUI_COMMONLIB_DIR}
+	${GUI_COMMONLIB_DIR}/$<CONFIG>
+	${GUI_COMMONLIB_DIR}/Release # default to Release if, e.g., a RelWithDebInfo build of a library is not available
+)
 
-list(APPEND CMAKE_PREFIX_PATH ${GUI_COMMONLIB_DIR} ${GUI_COMMONLIB_DIR}/${CONFIGURATION_FOLDER})
+add_library(${COMMONLIB_NAME} SHARED ${SRC_FILES})
 
-if(APPLE)
-	add_library(${PLUGIN_NAME} MODULE ${SRC_FILES})
-else()
-	add_library(${PLUGIN_NAME} SHARED ${SRC_FILES})
-endif()
+target_compile_features(${COMMONLIB_NAME} PUBLIC cxx_auto_type cxx_generalized_initializers cxx_std_17)
+target_include_directories(${COMMONLIB_NAME} PUBLIC
+	${GUI_BASE_DIR}/JuceLibraryCode
+	${GUI_BASE_DIR}/JuceLibraryCode/modules
+	${GUI_BASE_DIR}/Plugins/Headers
+	${GUI_COMMONLIB_DIR}/include)
 
-target_compile_features(${PLUGIN_NAME} PUBLIC cxx_auto_type cxx_generalized_initializers cxx_std_17)
-target_include_directories(${PLUGIN_NAME} PUBLIC ${GUI_BASE_DIR}/JuceLibraryCode ${GUI_BASE_DIR}/JuceLibraryCode/modules ${GUI_BASE_DIR}/Plugins/Headers ${GUI_COMMONLIB_DIR}/include)
-
-set(GUI_BIN_DIR ${GUI_BASE_DIR}/Build/${CONFIGURATION_FOLDER})
+set(GUI_BIN_DIR ${GUI_BASE_DIR}/Build/$<CONFIG>)
 
 if(NOT CMAKE_LIBRARY_ARCHITECTURE)
 	if(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -61,29 +63,23 @@ if(NOT CMAKE_LIBRARY_ARCHITECTURE)
 	endif()
 endif()
 
+install(TARGETS ${COMMONLIB_NAME}
+	LIBRARY DESTINATION ${GUI_COMMONLIB_DIR}/$<CONFIG>/lib/${CMAKE_LIBRARY_ARCHITECTURE} # .so, .dylib files
+	ARCHIVE DESTINATION ${GUI_COMMONLIB_DIR}/$<CONFIG>/lib/${CMAKE_LIBRARY_ARCHITECTURE} # .lib files
+	RUNTIME DESTINATION ${GUI_COMMONLIB_DIR}/$<CONFIG>/bin/${CMAKE_LIBRARY_ARCHITECTURE} # .dll files
+)
+install(FILES ${HEADER_FILES} DESTINATION ${GUI_COMMONLIB_DIR}/include)
+
 # Libraries and compiler options
 if(MSVC)
-	target_link_libraries(${PLUGIN_NAME} ${GUI_BIN_DIR}/open-ephys.lib)
-	target_compile_options(${PLUGIN_NAME} PRIVATE /sdl- /W0)
+	target_link_libraries(${COMMONLIB_NAME} ${GUI_BIN_DIR}/open-ephys.lib)
+	target_compile_options(${COMMONLIB_NAME} PRIVATE /sdl- /W0)
 
-	install(TARGETS ${PLUGIN_NAME} RUNTIME DESTINATION ${GUI_BIN_DIR}/plugins CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
+	install(TARGETS ${COMMONLIB_NAME} RUNTIME DESTINATION ${GUI_BIN_DIR}/shared)
 
-	set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../libs)
-elseif(LINUX)
-	target_link_libraries(${PLUGIN_NAME} GL X11 Xext Xinerama asound dl freetype pthread rt)
-	set_property(TARGET ${PLUGIN_NAME} APPEND_STRING PROPERTY LINK_FLAGS
-		"-fvisibility=hidden -fPIC -rdynamic -Wl,-rpath,'$$ORIGIN/../shared'")
-	target_compile_options(${PLUGIN_NAME} PRIVATE -fPIC -rdynamic)
-	target_compile_options(${PLUGIN_NAME} PRIVATE -O3) # enable optimization for linux debug
+	list(APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/libs/windows)
 
-	install(TARGETS ${PLUGIN_NAME} LIBRARY DESTINATION ${GUI_BIN_DIR}/plugins)
-elseif(APPLE)
-	set_target_properties(${PLUGIN_NAME} PROPERTIES BUNDLE TRUE)
-	set_property(TARGET ${PLUGIN_NAME} APPEND_STRING PROPERTY LINK_FLAGS
-		"-undefined dynamic_lookup -rpath @loader_path/../../../../shared")
-
-	install(TARGETS ${PLUGIN_NAME} DESTINATION /Users/simon/repo/plugin-GUI/Build/Release/open-ephys.app/Contents/PlugIns)
-	set(CMAKE_PREFIX_PATH /opt/local)
+	# Only windows for now
 endif()
 
 # create filters for vs and xcode
@@ -94,16 +90,25 @@ foreach(src_file IN ITEMS ${SRC_FILES})
 	source_group("${group_name}" FILES "${src_file}")
 endforeach()
 
-find_package(OpenIGTLink REQUIRED)
+# additional libraries
+find_library(OpenIGTLink_LIBRARY NAMES OpenIGTLink)
+find_path(OpenIGTLink_INCLUDE_DIRS igtlConfigure.h)
 
-include(
-	${OpenIGTLink_USE_FILE}
-)
+if(NOT OpenIGTLink_LIBRARY)
+	message(FATAL_ERROR "IGTLink library not found")
+else()
+	message(STATUS "IGTLink library: ${OpenIGTLink_LIBRARY}")
+endif()
 
-include_directories(
-	${OpenIGTLink_INCLUDE_DIRS}
-	${CMAKE_CURRENT_SOURCE_DIR}/Common
-)
+if(NOT OpenIGTLink_INCLUDE_DIRS)
+	message(FATAL_ERROR "IGTLink header not found")
+endif()
 
-target_link_libraries(${PLUGIN_NAME} OpenIGTLink)
-target_link_libraries(${PLUGIN_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/Build/Common/$<CONFIG>/OpenEphysIGTLinkCommon.lib)
+if(MSVC)
+	install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/windows/bin/${CMAKE_LIBRARY_ARCHITECTURE}/ DESTINATION ${GUI_BIN_DIR}/shared CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
+
+	# Only windows for now
+endif()
+
+target_link_libraries(${COMMONLIB_NAME} ${OpenIGTLink_LIBRARY})
+target_include_directories(${COMMONLIB_NAME} PRIVATE ${OpenIGTLink_INCLUDE_DIRS})
