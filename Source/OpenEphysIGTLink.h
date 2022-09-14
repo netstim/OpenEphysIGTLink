@@ -2,16 +2,13 @@
 #define OpenIGTLinkLogic_H_DEFINED
 
 #include <CommonLibHeader.h>
+#include "igtlSmartPointer.h"
 
-#include "igtlOSUtil.h"
-#include "igtlServerSocket.h"
-
-// namespace igtl
-// {
-//     class Socket;
-// extern template class SmartPointer<Socket>();
-// extern template class SmartPointer<class TObjectType>();
-// }
+namespace igtl
+{
+    class Socket;
+    extern template class SmartPointer<Socket>;
+}
 
 class COMMON_LIB OpenIGTLinkLogic
 {
@@ -33,7 +30,7 @@ public:
     static int currentPort;
 
 private:
-    static igtl::Socket::Pointer socket;
+    static igtl::SmartPointer<igtl::Socket> socket;
 
     JUCE_LEAK_DETECTOR(OpenIGTLinkLogic);
 };

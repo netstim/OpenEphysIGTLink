@@ -49,10 +49,8 @@ void OpenIGTLinkLogic::sendStringMessage(String deviceName, String sendString)
     strMsg->SetDeviceName(deviceName.toStdString());
     strMsg->SetString(sendString.toStdString());
     strMsg->Pack();
-    std::cout << sendString.toStdString() << std::endl;
     if (isConnected())
     {
-        std::cout << "sending" << std::endl;
         OpenIGTLinkLogic::socket->Send(strMsg->GetPackPointer(), strMsg->GetPackSize());
     }
 }
