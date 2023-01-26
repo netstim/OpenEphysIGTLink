@@ -35,7 +35,11 @@ set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS
 set(SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Source)
 file(GLOB_RECURSE SRC_FILES LIST_DIRECTORIES false "${SOURCE_PATH}/*.cpp")
 file(GLOB_RECURSE HEADER_FILES LIST_DIRECTORIES false "${SOURCE_PATH}/*.h")
-set(INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/libs/windows/include)
+if(MSVC)
+	set(INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/libs/windows/include)
+elseif(APPLE)
+	set(INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/libs/macos/include)
+endif()
 list(APPEND HEADER_FILES "${INCLUDE_PATH}/igtlSmartPointer.h")
 list(APPEND HEADER_FILES "${INCLUDE_PATH}/igtlMacro.h")
 list(APPEND HEADER_FILES "${INCLUDE_PATH}/igtlWin32Header.h")
@@ -84,7 +88,13 @@ if(MSVC)
 
 	list(APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/libs/windows)
 
-	# Only windows for now
+elseif(APPLE)
+	set_target_properties(${COMMONLIB_NAME} PROPERTIES BUNDLE FALSE)
+	set_property(TARGET ${COMMONLIB_NAME} APPEND_STRING PROPERTY LINK_FLAGS
+	"-undefined dynamic_lookup")
+
+	install(TARGETS ${COMMONLIB_NAME} DESTINATION $ENV{HOME}/Library/Application\ Support/open-ephys/shared-api8)
+	list(APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/libs/macos)
 endif()
 
 # create filters for vs and xcode
@@ -96,24 +106,25 @@ foreach(src_file IN ITEMS ${SRC_FILES})
 endforeach()
 
 # additional libraries
-find_library(OpenIGTLink_LIBRARY NAMES OpenIGTLink)
+find_library(OpenIGTLink_LIBRARY_DIRS NAMES OpenIGTLink)
 find_path(OpenIGTLink_INCLUDE_DIRS igtlConfigure.h)
 
-if(NOT OpenIGTLink_LIBRARY)
+if(NOT OpenIGTLink_LIBRARY_DIRS)
 	message(FATAL_ERROR "IGTLink library not found")
 else()
-	message(STATUS "IGTLink library: ${OpenIGTLink_LIBRARY}")
+	message(STATUS "IGTLink library: ${OpenIGTLink_LIBRARY_DIRS}")
 endif()
 
 if(NOT OpenIGTLink_INCLUDE_DIRS)
 	message(FATAL_ERROR "IGTLink header not found")
+else()
+	message(STATUS "IGTLink Include: ${OpenIGTLink_INCLUDE_DIRS}")
 endif()
-
 if(MSVC)
 	install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/windows/bin/${CMAKE_LIBRARY_ARCHITECTURE}/ DESTINATION ${GUI_BIN_DIR}/shared CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES})
-
-	# Only windows for now
+elseif(APPLE)
+	install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libs/macos/bin/ DESTINATION $ENV{HOME}/Library/Application\ Support/open-ephys/shared-api8)
 endif()
 
-target_link_libraries(${COMMONLIB_NAME} ${OpenIGTLink_LIBRARY})
+target_link_libraries(${COMMONLIB_NAME} ${OpenIGTLink_LIBRARY_DIRS})
 target_include_directories(${COMMONLIB_NAME} PRIVATE ${OpenIGTLink_INCLUDE_DIRS})
