@@ -58,10 +58,10 @@ void OpenIGTLinkLogic::sendPointMessage(String deviceName, Array<float> values)
 {
     igtl::PointMessage::Pointer pointMsg = igtl::PointMessage::New();
     pointMsg->SetDeviceName(deviceName.toStdString());
-    for (int i = 0; i < values.size();)
+    for (int i = 0; i < values.size(); i += 3)
     {
         igtl::PointElement::Pointer point = igtl::PointElement::New();
-        point->SetPosition(values[i++], values[i++], values[i++]);
+        point->SetPosition(values[i], values[i + 1], values[i + 2]);
         point->SetName(std::to_string(i / 3).c_str());
         point->SetGroupName("GROUP_0");
         point->SetRGBA(0x00, 0x00, 0xFF, 0xFF);
